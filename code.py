@@ -2,8 +2,8 @@
 # TOKEN = "507882226:AAHpSyFVLfgMyEpMLP_bxJUmkKa5rgdYsBQ"
 import telegram
 
-# TOKEN = "560642035:AAGO1DmK_bUB9aSd5iUgaGfxuDzTv_kHHrQ"
-TOKEN = "488025339:AAEkCdi5LudTmYIjxsVbmCopeP2NZc7NS7w"
+TOKEN = "560642035:AAGO1DmK_bUB9aSd5iUgaGfxuDzTv_kHHrQ"
+# TOKEN = "488025339:AAEkCdi5LudTmYIjxsVbmCopeP2NZc7NS7w"
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 import logging
