@@ -2,7 +2,8 @@
 # TOKEN = "507882226:AAHpSyFVLfgMyEpMLP_bxJUmkKa5rgdYsBQ"
 import telegram
 
-TOKEN = "560642035:AAGO1DmK_bUB9aSd5iUgaGfxuDzTv_kHHrQ"
+# TOKEN = "560642035:AAGO1DmK_bUB9aSd5iUgaGfxuDzTv_kHHrQ"
+TOKEN = "488025339:AAEkCdi5LudTmYIjxsVbmCopeP2NZc7NS7w"
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 import logging
@@ -18,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 class User:
     def __init__(self, **entries):
-        self.state = "start"
+        self.STDnumber = ""
+        self.state = ""
         self.seen = []
         self.submited = []
         self.approved = []
@@ -37,17 +39,24 @@ def start(bot, update):
         # todo ask student_number
         print(user_dict)
         print("*******************************************************************************************")
-    user = user_dict[str(chat_id)]
-    user.state = "start"
-    if chat_id not in admins:
-        reply_keyboard = [['مسابقه عید', 'امکانات دیگر'], ['درباره ما', 'پیشنهادات و انتقادات']]
+        user.state = "Ask_Name"
+        text = 'به نام خدا' + "\n" + 'شما در حال استفاده از ربات درس جبر خطی دانشکده مهندسی کامپیوتر دانشگاه صنعتی هستید!' + \
+               "\n" + "آدرس کانال درس: @ceit_linear_algebra "
+        update.message.reply_text(text)
+        update.message.reply_text("لطفا شماره دانشجویی خود را وارد کنید")
     else:
-        reply_keyboard = [['مسابقه عید', 'امکانات دیگر'], ['درباره ما', 'پیشنهادات و انتقادات'], ['پاسخ به سوالات']]
-    text = 'به نام خدا' + "\n" + 'شما در حال استفاده از ربات درس جبر خطی دانشکده مهندسی کامپیوتر دانشگاه صنعتی هستید!' + \
-           "\n" + "آدرس کانال درس: @ceit_linear_algebra "
-    update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        user = user_dict[str(chat_id)]
+        user.state = "start"
+        if chat_id not in admins:
+            reply_keyboard = [['مسابقه عید', 'امکانات دیگر'], ['درباره ما', 'پیشنهادات و انتقادات']]
+        else:
+            reply_keyboard = [['مسابقه عید', 'امکانات دیگر'], ['درباره ما', 'پیشنهادات و انتقادات'],
+                              ['انتخاب کاربر', 'افزودن سوال جدید']]
+        text = 'به نام خدا' + "\n" + 'شما در حال استفاده از ربات درس جبر خطی دانشکده مهندسی کامپیوتر دانشگاه صنعتی هستید!' + \
+               "\n" + "آدرس کانال درس: @ceit_linear_algebra "
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    write_json()
+    write_json('data.json', user_dict)
 
 
 def update_handler(bot, update):
@@ -55,16 +64,31 @@ def update_handler(bot, update):
         chat_id = update.message.chat.id
         user = user_dict[str(chat_id)]
 
-        if user.state == "start":
+        if user.state == "Ask_Name":
+            if update.message.text:
+                user.STDnumber = update.message.text
+                update.message.reply_text("شماره دانشجویی شما با موفقیت ثبت شد")
+
+                user.state = "start"
+        elif user.state == "start":
             if update.message.text:
                 if update.message.text == "مسابقه عید":
                     user.state = "challenge"
                 if update.message.text == "درباره ما":
                     update.message.reply_text(
-                        'این بات توسط تیم تدریسیاری و با همکاری آقای سمیعی پاقعله نوشته شده است! ')
+                        'این ربات، برای استفاده در درس جبرخطی کاربردی دانشکده مهندسی کامپیوتر دانشگاه صنعتی امیرکبیر '
+                        'توسط تیم تدریسیاری این درس ایجاد شده است. '
+                        '\n'
+                        'در صورت سوال در مورد عملکرد این ربات به آیدی @ehssan_me پیام دهید. '
+                        '\n'
+                        'با تشکر از آقای محمدمهدی سمیعی پاقلعه که در توسعه این ربات به ما کمک کردند.'
+                    )
                 if update.message.text == 'امکانات دیگر':
                     update.message.reply_text(
-                        'به زودی امکانات دیگری از جمله امکان دریافت تمرین ها به این ربات اضافه خواهد شد')
+                        'به زودی امکانات دیگری از جمله امکان دریافت تمرین ها به این ربات اضافه خواهد شد'
+                        '\n'
+                        'لطفا پیشنهادات خود را در این زمینه با ما در میان بگذارید!'
+                    )
                 if update.message.text == 'پیشنهادات و انتقادات':
                     update.message.reply_text('لطفا پیشنهاد و یا انتقاد خود را بنویسید')
                     user.state = "send_suggestions"
@@ -89,21 +113,29 @@ def update_handler(bot, update):
                         update.message.reply_text('فعلا سوال جدیدی وجود ندارد. منتظر سوالات جدید ما باشید!')
                         user.state = "game_state"
                     else:
-                        try:
-                            # todo #importat " اکسپشن میخوره ولی باز فایل ارسال میشه وجز سوالات فرد محاسبه نمیشه"
-                            random_question = random.choice(list(set(problem_list) ^ set(user.seen)))
-                            bot.send_document(chat_id, document=open('./problems/' + random_question, 'rb'))
-                            user.current_problem = random_question
-                            user.seen.append(random_question)
-                            user.state = "thinking"
-                        except:
-                            update.message.reply_text("به علت خطا در شبکه، لطفا مجددا تلاش کنید")
+                        # try:
+                        # todo #importat " اکسپشن میخوره ولی باز فایل ارسال میشه وجز سوالات فرد محاسبه نمیشه"
+                        random_question = random.choice(list(set(problem_list) ^ set(user.seen)))
+                        bot.send_document(chat_id, document=open('./problems/' + random_question, 'rb'))
+                        user.current_problem = random_question
+                        user.seen.append(random_question)
+                        user.state = "thinking"
+                        # except:
+                        #     update.message.reply_text("به علت خطا در شبکه، لطفا مجددا تلاش کنید")
                 if update.message.text == "وضعیت سوال‌ها":
                     user.state = "game_state"
                     text = "\n".join(user.seen)
-                    update.message.reply_text("سوالات مشاهده شده توسط شما: \n" + text)
+                    if text == "":
+                        update.message.reply_text("سوالات مشاهده شده توسط شما: \n"
+                                                  "هنوز سوالی ثبت نشده است")
+                    else:
+                        update.message.reply_text("سوالات مشاهده شده توسط شما: \n" + text)
                     text = "\n".join(user.approved)
-                    update.message.reply_text("سوالات با پاسخ صحیح : \n" + text)
+                    if text == "":
+                        update.message.reply_text("سوالات تصحیح شده شما : \n"
+                                                  "هنوز سوالی ثبت نشده است")
+                    else:
+                        update.message.reply_text("سوالات تصحیح شده شما : \n" + text)
                     if user.current_problem:
                         update.message.reply_text("\n" + "سوالی که هم اکنون برای شما فعال است:" + user.current_problem)
                 if update.message.text == "درخواست کمک از تدریسیاران":
@@ -111,7 +143,8 @@ def update_handler(bot, update):
                     user.state = "send_message"
 
                 if update.message.text == "جدول امتیازات":
-                    update.message.reply_text("به زودی جدول امتیازات به روز رسانی خواهد شد و از این طریق قابل دسترسی است")
+                    update.message.reply_text(
+                        "به زودی جدول امتیازات به روز رسانی خواهد شد و از این طریق قابل دسترسی است")
                     user.state = "game_state"
                 # TODO جدول امتیازات
                 if update.message.text == "بازگشت":
@@ -120,7 +153,10 @@ def update_handler(bot, update):
             if update.message.text:
                 if update.message.text:
                     if update.message.text == "ارسال پاسخ":
-                        update.message.reply_text('فایل خود را آپلود کنید')
+                        update.message.reply_text('پاسخ خود را با که نام گذاری آن به فرمت '
+                                                    'StudentNumber_Name_HomeworkTitle.pdf'
+                                                  'است، آپلود کنید!'
+                                                  )
                         user.state = "waiting_upload"
                     if update.message.text == "انصراف":
                         update.message.reply_text('متاسفانه امکان حل این سوال را از دست دادید!')
@@ -132,13 +168,15 @@ def update_handler(bot, update):
             if update.message.document:
                 try:
                     user.submited.append(user.current_problem)
-                    update.message.document.get_file().download(".//responses//" + update.message.document.file_name)#update.message.document.file_name +
+                    update.message.document.get_file().download(
+                        ".//responses//" + update.message.document.file_name)  # update.message.document.file_name +
                     update.message.reply_text("فایل دریافت شد")
                     update.message.forward(-1001332379255)  # ALA_Responses Channel ID
                     user.current_problem = ""
                     user.state = "game_state"
                 except:
-                    update.message.reply_text("لطفا پاسخ خود را مجددا بارگزاری نمایید")
+                    update.message.reply_text("متاسفانه موفق به دریافت پاسخ شما نشدیم، "
+                                              "لطفا چند لحظه بعد مجددا تلاش فرمایید")
             elif update.message.text == "انصراف":
                 update.message.reply_text('متاسفانه امکان حل این سوال را از دست دادید!')
                 user.current_problem = ""
@@ -189,10 +227,14 @@ def update_handler(bot, update):
         if chat_id in admins:
             if user.state == "start":
                 if update.message.text:
-                    if update.message.text == "پاسخ به سوالات":
+                    if update.message.text == "انتخاب کاربر":
                         update.message.reply_text(
                             'لطفا ابتدا یک پیام از مخاطب مورد نظر فوروارد کنید')
                         user.state = "choosePartner"
+                    if update.message.text == "افزودن سوال جدید":
+                        update.message.reply_text(
+                            'نام کامل فایل سوال را وارد کنید، و فایل pdf آن را در پوشه problem قرار دهید')
+                        user.state = "AddNewProblem"
             elif user.state == "choosePartner":
                 if update.message:
                     if update.message.text == 'بازگشت':
@@ -200,18 +242,50 @@ def update_handler(bot, update):
                     elif update.message.forward_from:
                         user.pid = update.message.forward_from.id
                         update.message.reply_text('مخاطب با شناسه' + str(user.pid) + 'انتخاب شد.'
-                                                  + '\n' + 'حال پیام مورد نظر خود را وارد کنید')
+                                                  + '\n' + 'فعالیت مورد نظر خود را انتخاب کنید')
                         user.state = "responding"
-
             elif user.state == "responding":
+                if update.message:
+                    if update.message.text == 'بازگشت':
+                        user.state = 'start'
+                    elif update.message.text == 'ارسال پیام':
+                        update.message.reply_text('حال پیام خود را ارسال کنید')
+                        user.state = 'send_message_to_user'
+                    elif update.message.text == 'آپدیت سوالات تصحیح شده':
+                        update.message.reply_text('حال سوال تصحیح شده را ارسال کنید')
+                        user.state = 'specify_graded_problem'
+
+            elif user.state == "send_message_to_user":
                 if update.message:
                     if update.message.text == 'بازگشت':
                         user.state = 'start'
                     else:
                         bot.send_message(chat_id=user.pid, text=update.message.text)
-                        update.message.reply_text('پیام مورد نظر ارسال شد')
+                        update.message.reply_text("پیام شما ارسال شد")
                         user.pid = 0
                         user.state = 'start'
+
+            elif user.state == "specify_graded_problem":
+                if update.message:
+                    if update.message.text == 'بازگشت':
+                        user.state = 'start'
+                    else:
+                        selectedUser = user_dict[str(user.pid)]
+                        text = update.message.text
+                        selectedUser.approved.append(text)
+                        update.message.reply_text('سوال' + text + 'به مجموعه سوالات تصحیح شده کاربر فوق اضافه شد')
+                        user.pid = 0
+                        user.state = 'start'
+
+            elif user.state == "AddNewProblem":
+                if update.message:
+                    if update.message.text == 'بازگشت':
+                        user.state = 'start'
+                    else:
+                        problem_list.append(update.message.text)
+                        write_json('problems.json', problem_list)
+                        user.state = 'start'
+
             # print(uid)
             #     print("i'm here")
             #     if update.message:
@@ -219,7 +293,7 @@ def update_handler(bot, update):
 
             if user.state == "start":
                 reply_keyboard = [['مسابقه عید', 'امکانات دیگر'], ['درباره ما', 'پیشنهادات و انتقادات'],
-                                  ['پاسخ به سوالات']]
+                                  ['انتخاب کاربر', 'افزودن سوال جدید']]
                 update.message.reply_text("یکی از گزینه‌های زیر را انتخاب فرمایید",
                                           reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
             elif user.state == 'choosePartner':
@@ -227,43 +301,63 @@ def update_handler(bot, update):
                 update.message.reply_text("در صورت پشیمان شدن گزینه بازگشت را انتخاب کنید",
                                           reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
             elif user.state == 'responding':
+                reply_keyboard = [['بازگشت'], ['ارسال پیام'], ['آپدیت سوالات تصحیح شده']]
+                update.message.reply_text("در صورت پشیمان شدن گزینه بازگشت را انتخاب کنید",
+                                          reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+            elif user.state == 'AddNewProblem':
+                reply_keyboard = [['بازگشت']]
+                update.message.reply_text("در صورت پشیمان شدن گزینه بازگشت را انتخاب کنید",
+                                          reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+            elif user.state == 'send_message_to_user':
+                reply_keyboard = [['بازگشت']]
+                update.message.reply_text("در صورت پشیمان شدن گزینه بازگشت را انتخاب کنید",
+                                          reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+            elif user.state == 'specify_graded_problem':
                 reply_keyboard = [['بازگشت']]
                 update.message.reply_text("در صورت پشیمان شدن گزینه بازگشت را انتخاب کنید",
                                           reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-        write_json()
+        write_json('data.json', user_dict)
 
 
 def error_callback(bot, update, error):
     try:
         raise error
     except Unauthorized:
-        pass
+        update.message.reply_text("لطفا مجددا تلاش فرمایید0")
+        # pass
     # remove update.message.chat_id from conversation list
     except BadRequest:
-        pass
+        update.message.reply_text("لطفا مجددا تلاش فرمایید1")
+        # pass
     # handle malformed requests - read more below!
     except TimedOut:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید2")
     # handle slow connection problems
     except NetworkError:
-        pass
+        update.message.reply_text("لطفا مجددا تلاش فرمایید3")
+        # pass
     except ChatMigrated as e:
-        pass
+        update.message.reply_text("لطفا مجددا تلاش فرمایید4")
+        # pass
     # the chat_id of a group has changed, use e.new_chat_id instead
     except TelegramError:
-        pass
+        update.message.reply_text("لطفا مجددا تلاش فرمایید5")
+        # pass
         # handle all other telegram related errors
 
 
-def write_json():
-    with open('data.json', 'w') as fp:
-        json.dump(user_dict, fp, default=lambda o: o.__dict__)
+def write_json(file, data):
+    with open(file, 'w') as fp:
+        json.dump(data, fp, default=lambda o: o.__dict__)
+
+        # with open('data.json', 'w') as fp:
+        #     json.dump(user_dict, fp, default=lambda o: o.__dict__)
 
 
 def main():
     global admins
-    admins = [73675932]
+    admins = [73675933]
     global user_dict
     global problem_list
     try:
@@ -277,7 +371,7 @@ def main():
         user_dict = {}
     try:
         with open('problems.json', 'r') as fp:
-            problem_list = json.load(fp)["problems"]
+            problem_list = json.load(fp)  # ["problems"]
             print(problem_list)
     except:
         print("it is execpt in reading problem")
