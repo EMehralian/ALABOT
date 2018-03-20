@@ -56,7 +56,7 @@ def start(bot, update):
                "\n" + "آدرس کانال درس: @ceit_linear_algebra "
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    write_json('data.json', user_dict)
+    write_json()
 
 
 def update_handler(bot, update):
@@ -68,7 +68,6 @@ def update_handler(bot, update):
             if update.message.text:
                 user.STDnumber = update.message.text
                 update.message.reply_text("شماره دانشجویی شما با موفقیت ثبت شد")
-
                 user.state = "start"
         elif user.state == "start":
             if update.message.text:
@@ -105,7 +104,7 @@ def update_handler(bot, update):
             if update.message.text:
                 if update.message.text == "سوال فعلی":
                     update.message.reply_text(
-                        'شما هم اکنون مشغول فکر کردن بر روی سوال' + str(user.current_problem) + 'هستید' + '\n'
+                        'شما هم اکنون مشغول فکر کردن بر روی سوال ' + str(user.current_problem) + ' هستید' + '\n'
                         + ' برای دریافت سوال جدید یا پاسخ این سوال را آپلود کنید و  یا از پاسخ به آن انصراف دهید.')
                     user.state = "thinking"
                 if update.message.text == "دریافت سوال جدید":
@@ -132,12 +131,13 @@ def update_handler(bot, update):
                         update.message.reply_text("سوالات مشاهده شده توسط شما: \n" + text)
                     text = "\n".join(user.approved)
                     if text == "":
-                        update.message.reply_text("سوالات تصحیح شده شما : \n"
+                        update.message.reply_text("سوالات تصحیح شده شما: \n"
                                                   "هنوز سوالی ثبت نشده است")
                     else:
-                        update.message.reply_text("سوالات تصحیح شده شما : \n" + text)
+                        update.message.reply_text("سوالات تصحیح شده شما: \n" + text)
                     if user.current_problem:
-                        update.message.reply_text("\n" + "سوالی که هم اکنون برای شما فعال است:" + user.current_problem)
+                        update.message.reply_text("\n  :سوالی که هم اکنون برای شما فعال است"
+                                                  + user.current_problem)
                 if update.message.text == "درخواست کمک از تدریسیاران":
                     update.message.reply_text('لطفا سوال خود را بفرمایید!')
                     user.state = "send_message"
@@ -155,7 +155,7 @@ def update_handler(bot, update):
                     if update.message.text == "ارسال پاسخ":
                         update.message.reply_text('پاسخ خود را با که نام گذاری آن به فرمت '
                                                     'StudentNumber_Name_HomeworkTitle.pdf'
-                                                  'است، آپلود کنید!'
+                                                  ' است، آپلود کنید!'
                                                   )
                         user.state = "waiting_upload"
                     if update.message.text == "انصراف":
@@ -167,9 +167,9 @@ def update_handler(bot, update):
         elif user.state == "waiting_upload":
             if update.message.document:
                 try:
-                    user.submited.append(user.current_problem)
                     update.message.document.get_file().download(
                         ".//responses//" + update.message.document.file_name)  # update.message.document.file_name +
+                    user.submited.append(user.current_problem)
                     update.message.reply_text("فایل دریافت شد")
                     update.message.forward(-1001332379255)  # ALA_Responses Channel ID
                     user.current_problem = ""
@@ -233,7 +233,7 @@ def update_handler(bot, update):
                         user.state = "choosePartner"
                     if update.message.text == "افزودن سوال جدید":
                         update.message.reply_text(
-                            'نام کامل فایل سوال را وارد کنید، و فایل pdf آن را در پوشه problem قرار دهید')
+                            'نام کامل فایل سوال را وارد کنید و فایل pdf آن را در پوشه problem قرار دهید')
                         user.state = "AddNewProblem"
             elif user.state == "choosePartner":
                 if update.message:
@@ -283,8 +283,10 @@ def update_handler(bot, update):
                         user.state = 'start'
                     else:
                         problem_list.append(update.message.text)
-                        write_json('problems.json', problem_list)
+                        write_problemjson()
+                        update.message.reply_text('سوال جدید با موفقیت ثبت شد')
                         user.state = 'start'
+
 
             # print(uid)
             #     print("i'm here")
@@ -317,7 +319,7 @@ def update_handler(bot, update):
                 update.message.reply_text("در صورت پشیمان شدن گزینه بازگشت را انتخاب کنید",
                                           reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-        write_json('data.json', user_dict)
+        write_json()
 
 
 def error_callback(bot, update, error):
@@ -347,17 +349,18 @@ def error_callback(bot, update, error):
         # handle all other telegram related errors
 
 
-def write_json(file, data):
-    with open(file, 'w') as fp:
-        json.dump(data, fp, default=lambda o: o.__dict__)
+def write_json():
+    with open('data.json', 'w') as fp:
+        json.dump(user_dict, fp, default=lambda o: o.__dict__)
 
-        # with open('data.json', 'w') as fp:
-        #     json.dump(user_dict, fp, default=lambda o: o.__dict__)
 
+def write_problemjson():
+    with open('problems.json', 'w') as fp:
+        json.dump(problem_list, fp, default=lambda o: o.__dict__)
 
 def main():
     global admins
-    admins = [73675933]
+    admins = [73675932]
     global user_dict
     global problem_list
     try:
@@ -377,6 +380,8 @@ def main():
         print("it is execpt in reading problem")
         problem_list = []
     uid = 0
+    print(user_dict)
+    print(problem_list)
     updater = Updater(TOKEN)
     dp = updater.dispatcher
 
