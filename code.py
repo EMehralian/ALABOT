@@ -326,25 +326,25 @@ def error_callback(bot, update, error):
     try:
         raise error
     except Unauthorized:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید0")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید")
         # pass
     # remove update.message.chat_id from conversation list
     except BadRequest:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید1")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید")
         # pass
     # handle malformed requests - read more below!
     except TimedOut:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید2")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید")
     # handle slow connection problems
     except NetworkError:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید3")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید")
         # pass
     except ChatMigrated as e:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید4")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید")
         # pass
     # the chat_id of a group has changed, use e.new_chat_id instead
     except TelegramError:
-        update.message.reply_text("لطفا مجددا تلاش فرمایید5")
+        update.message.reply_text("لطفا مجددا تلاش فرمایید")
         # pass
         # handle all other telegram related errors
 
@@ -381,7 +381,7 @@ def main():
         problem_list = []
     uid = 0
     print(user_dict)
-    print(problem_list)
+    # print(problem_list)
     updater = Updater(TOKEN)
     dp = updater.dispatcher
 
