@@ -360,7 +360,7 @@ def write_problemjson():
 
 def main():
     global admins
-    admins = [73675932]
+    admins = [73675932, 100784727]
     global user_dict
     global problem_list
     try:
