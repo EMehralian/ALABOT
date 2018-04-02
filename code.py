@@ -112,15 +112,18 @@ def update_handler(bot, update):
                         update.message.reply_text('فعلا سوال جدیدی وجود ندارد. منتظر سوالات جدید ما باشید!')
                         user.state = "game_state"
                     else:
+                        update.message.reply_text('با تشکر از شرکت شما در مسابقه، زمان پاسخ گویی به سوالات به اتمام '
+                                                  'رسیده است')
+                        user.state = "game_state"
                         # try:
                         # todo #importat " اکسپشن میخوره ولی باز فایل ارسال میشه وجز سوالات فرد محاسبه نمیشه"
-                        random_question = random.choice(list(set(problem_list) ^ set(user.seen)))
-                        bot.send_document(chat_id, document=open('./problems/' + random_question, 'rb'))
-                        user.current_problem = random_question
-                        user.seen.append(random_question)
-                        user.state = "thinking"
-                        # except:
-                        #     update.message.reply_text("به علت خطا در شبکه، لطفا مجددا تلاش کنید")
+                    #                       random_question = random.choice(list(set(problem_list) ^ set(user.seen)))
+                    #                        bot.send_document(chat_id, document=open('./problems/' + random_question, 'rb'))
+                    #                        user.current_problem = random_question
+                    #                        user.seen.append(random_question)
+                    #                        user.state = "thinking"
+                    # except:
+                    #     update.message.reply_text("به علت خطا در شبکه، لطفا مجددا تلاش کنید")
                 if update.message.text == "وضعیت سوال‌ها":
                     user.state = "game_state"
                     text = "\n".join(user.seen)
@@ -153,11 +156,14 @@ def update_handler(bot, update):
             if update.message.text:
                 if update.message.text:
                     if update.message.text == "ارسال پاسخ":
-                        update.message.reply_text('پاسخ خود را با که نام گذاری آن به فرمت '
-                                                    'StudentNumber_Name_HomeworkTitle.pdf'
-                                                  ' است، آپلود کنید!'
-                                                  )
-                        user.state = "waiting_upload"
+                        update.message.reply_text('با تشکر از شرکت شما در مسابقه، زمان پاسخ گویی به سوالات به اتمام '
+                                                  'رسیده است')
+                        user.state = "game_state"
+                        # update.message.reply_text('پاسخ خود را با که نام گذاری آن به فرمت '
+                        #                             'StudentNumber_Name_HomeworkTitle.pdf'
+                        #                           ' است، آپلود کنید!'
+                        #                           )
+                        # user.state = "waiting_upload"
                     if update.message.text == "انصراف":
                         update.message.reply_text('متاسفانه امکان حل این سوال را از دست دادید!')
                         user.current_problem = ""
@@ -166,17 +172,21 @@ def update_handler(bot, update):
                         user.state = "game_state"
         elif user.state == "waiting_upload":
             if update.message.document:
-                try:
-                    update.message.document.get_file().download(
-                        ".//responses//" + update.message.document.file_name)  # update.message.document.file_name +
-                    user.submited.append(user.current_problem)
-                    update.message.reply_text("فایل دریافت شد")
-                    update.message.forward(-1001332379255)  # ALA_Responses Channel ID
-                    user.current_problem = ""
-                    user.state = "game_state"
-                except:
-                    update.message.reply_text("متاسفانه موفق به دریافت پاسخ شما نشدیم، "
-                                              "لطفا چند لحظه بعد مجددا تلاش فرمایید")
+
+                update.message.reply_text('با تشکر از شرکت شما در مسابقه، زمان پاسخ گویی به سوالات به اتمام '
+                                          'رسیده است')
+                user.state = "game_state"
+                # try:
+                #     update.message.document.get_file().download(
+                #         ".//responses//" + update.message.document.file_name)  # update.message.document.file_name +
+                #     user.submited.append(user.current_problem)
+                #     update.message.reply_text("فایل دریافت شد")
+                #     update.message.forward(-1001332379255)  # ALA_Responses Channel ID
+                #     user.current_problem = ""
+                #     user.state = "game_state"
+                # except:
+                #     update.message.reply_text("متاسفانه موفق به دریافت پاسخ شما نشدیم، "
+                #                               "لطفا چند لحظه بعد مجددا تلاش فرمایید")
             elif update.message.text == "انصراف":
                 update.message.reply_text('متاسفانه امکان حل این سوال را از دست دادید!')
                 user.current_problem = ""
@@ -287,7 +297,6 @@ def update_handler(bot, update):
                         update.message.reply_text('سوال جدید با موفقیت ثبت شد')
                         user.state = 'start'
 
-
             # print(uid)
             #     print("i'm here")
             #     if update.message:
@@ -357,6 +366,7 @@ def write_json():
 def write_problemjson():
     with open('problems.json', 'w') as fp:
         json.dump(problem_list, fp, default=lambda o: o.__dict__)
+
 
 def main():
     global admins
